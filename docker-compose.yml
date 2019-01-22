@@ -86,6 +86,30 @@ services:
       - DJANGO_SETTINGS_MODULE=signals.settings.development
       - SIGMAX_AUTH_TOKEN
       - SIGMAX_SERVER
+
+      # For ZDS:
+      - ZTC_HOST
+      - ZTC_PORT
+      - ZTC_SCHEME
+      - ZTC_CLIENT_ID
+      - ZTC_CLIENT_SECRET
+
+      - ZTC_CATALOGUS_ID
+      - ZTC_ZAAKTYPE_ID
+      - ZTC_INFORMATIEOBJECTTYPE_ID
+
+      - ZRC_HOST
+      - ZRC_PORT
+      - ZRC_SCHEME
+      - ZRC_CLIENT_ID
+      - ZRC_CLIENT_SECRET
+
+      - DRC_HOST
+      - DRC_PORT
+      - DRC_SCHEME
+      - DRC_CLIENT_ID
+      - DRC_CLIENT_SECRET
+
     volumes:
       - ./api/app:/app
       - ./api/deploy:/deploy
