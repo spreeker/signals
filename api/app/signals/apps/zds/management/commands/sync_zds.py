@@ -48,16 +48,12 @@ class Command(BaseCommand):
 
         If everything went correctly, continue to add the statusses to the ZDS components.
         """
-        try:
-            create_case(signal)
+        create_case(signal)
 
-            try:
-                connect_signal_to_case(signal)
-                self.sync_status(signal)
-            except CaseConnectionException as case_exception:
-                logger.exception(case_exception)
-                self.stderr.write(repr(case_exception))
-        except CaseNotCreatedException as case_exception:
+        try:
+            connect_signal_to_case(signal)
+            self.sync_status(signal)
+        except CaseConnectionException as case_exception:
             logger.exception(case_exception)
             self.stderr.write(repr(case_exception))
 
