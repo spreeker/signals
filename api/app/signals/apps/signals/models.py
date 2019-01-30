@@ -437,8 +437,8 @@ class SubCategory(models.Model):
                                       on_delete=models.PROTECT)
     slug = models.SlugField()
     name = models.CharField(max_length=255)
-    handling = models.CharField(max_length=20, choices=HANDLING_CHOICES)
-    departments = models.ManyToManyField('signals.Department')
+    handling = models.CharField(max_length=20, choices=HANDLING_CHOICES, null=True, blank=True)
+    departments = models.ManyToManyField('signals.Department', null=True)
     is_active = models.BooleanField(default=True)
 
     parent = models.ForeignKey(
@@ -449,10 +449,15 @@ class SubCategory(models.Model):
         unique_together = ('main_category', 'slug', )
         verbose_name_plural = 'Sub Categories'
 
-    def __str__(self):
-        """String representation."""
-        return '{name} ({main_category})'.format(name=self.name,
-                                                 main_category=self.main_category.name)
+    # def __str__(self):
+    #     """String representation."""
+    #     return '{name} ({main_category})'.format(name=self.name,
+    #                                              main_category=self.main_category.name)
+
+    def clean(self):
+        if not self.parent and self.departments:
+            raise ValidationError('Main category cannot have associated departments.')
+        return super().clean()
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
