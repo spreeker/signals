@@ -441,6 +441,9 @@ class SubCategory(models.Model):
     departments = models.ManyToManyField('signals.Department')
     is_active = models.BooleanField(default=True)
 
+    parent = models.ForeignKey(
+        'self', null=True, blank=True, related_name='children', on_delete=models.CASCADE)
+
     class Meta:
         ordering = ('name', )
         unique_together = ('main_category', 'slug', )
