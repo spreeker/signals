@@ -70,6 +70,9 @@ INSTALLED_APPS = [
     'signals.apps.dashboards',
     'signals.apps.feedback',
 
+    # WIP
+    'signals.apps.search',
+
     # Third party
     'corsheaders',
     'datapunt_api',
@@ -238,10 +241,14 @@ CELERY_BEAT_SCHEDULE = {
                 '.task_save_csv_files_datawarehouse',
         'schedule': crontab(hour=4),
     },
+    # 'rebuild-elastic': {  # Run task every 3rd day of the week at midnight
+    #     'task': 'signals.apps.search.tasks.rebuild_index',
+    #     'schedule': crontab(minute='00', hour='00', day_of_week='3'),
+    # },
 }
 
 # E-mail settings for SMTP (SendGrid)
-EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'djcelery_email.backends.CeleryEmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
@@ -462,4 +469,16 @@ FEEDBACK_ENV_FE_MAPPING = {
     'LOCAL': 'http://dummy_link',
     'ACCEPTANCE': 'https://acc.meldingen.amsterdam.nl',
     'PRODUCTION': 'https://meldingen.amsterdam.nl',
+}
+
+# Search settings
+SEARCH_SETTINGS = {
+    'PAGE_SIZE': 500,
+    'ELASTIC': {
+        'connections': {
+            'default': {
+                'hosts': os.getenv('ELASTIC_HOST', 'http://127.0.0.1:9200')
+            }
+        }
+    },
 }

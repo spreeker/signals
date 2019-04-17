@@ -1,5 +1,14 @@
-version: '2.0'
+version: "2.0"
 services:
+
+  elasticsearch:
+    image: amsterdam/elasticsearch6
+    command: elasticsearch -Ehttp.host=0.0.0.0 -Etransport.host=127.0.0.1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "~/.ssh/datapunt.key:/root/.ssh/datapunt.key"
 
   database:
     image: amsterdam/postgres
@@ -27,40 +36,34 @@ services:
     links:
       - database
       - rabbit
+      - elasticsearch
     environment:
-      - DB_NAME=meldingen
+      - DB_NAME=signals
       - DB_PASSWORD=insecure
-      - EMAIL_HOST
-      - EMAIL_HOST_PASSWORD
-      - EMAIL_HOST_USER
-      - EMAIL_PORT
-      - EMAIL_USE_SSL
-      - EMAIL_USE_TLS
+      - EMAIL_BACKEND=django.core.mail.backends.locmem.EmailBackend
       - DJANGO_SETTINGS_MODULE=signals.settings.development
+      - ELASTIC_HOST=elasticsearch:9200
     volumes:
       - ./api/app:/app
       - ./api/deploy:/deploy
-    command: celery -A signals worker -l info
+    command: celery -A signals worker -l debug
 
   celery_beat:
     build: ./api
     links:
       - database
       - rabbit
+      - elasticsearch
     environment:
-      - DB_NAME=meldingen
+      - DB_NAME=signals
       - DB_PASSWORD=insecure
-      - EMAIL_HOST
-      - EMAIL_HOST_PASSWORD
-      - EMAIL_HOST_USER
-      - EMAIL_PORT
-      - EMAIL_USE_SSL
-      - EMAIL_USE_TLS
+      - EMAIL_BACKEND=django.core.mail.backends.locmem.EmailBackend
       - DJANGO_SETTINGS_MODULE=signals.settings.development
+      - ELASTIC_HOST=elasticsearch:9200
     volumes:
       - ./api/app:/app
       - ./api/deploy:/deploy
-    command: celery -A signals beat -l info --pidfile /tmp/celerybeat.pid
+    command: celery -A signals beat -l info --pidfile /app/celerybeat.pid
 
   api:
     build: ./api
@@ -69,6 +72,7 @@ services:
     links:
       - database
       - rabbit
+      - elasticsearch
     environment:
       - DB_NAME=signals
       - DB_PASSWORD=insecure
@@ -86,6 +90,7 @@ services:
       - DJANGO_SETTINGS_MODULE=signals.settings.development
       - SIGMAX_AUTH_TOKEN
       - SIGMAX_SERVER
+      - ELASTIC_HOST=elasticsearch:9200
     volumes:
       - ./api/app:/app
       - ./api/deploy:/deploy
@@ -96,5 +101,5 @@ services:
     links:
       - database
     environment:
-      - DB_NAME=meldingen
+      - DB_NAME=signals
       - DB_PASSWORD=insecure

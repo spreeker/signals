@@ -7,6 +7,7 @@ from signals.apps.api.v1.private.views import SignalCategoryRemovedAfterViewSet
 from signals.apps.api.v1.public import views as v1_public_views
 from signals.apps.api.v1.routers import SignalsRouterVersion1
 from signals.apps.feedback.views import FeedbackViewSet, StandardAnswerViewSet
+from signals.apps.search.views import SearchView
 from signals.apps.signals.models import Category
 
 # API Version 1
@@ -102,6 +103,14 @@ signal_router_v1.urls.append(
         'private/signals/category/removed',
         SignalCategoryRemovedAfterViewSet.as_view({'get': 'list'}),
         name='signal-category-changed-since'
+    )
+)
+
+signal_router_v1.urls.append(
+    path(
+        'private/search',
+        SearchView.as_view({'get': 'list'}),
+        name='elastic-search'
     )
 )
 
