@@ -203,17 +203,18 @@ class PriorityFactory(factory.DjangoModelFactory):
 
 class ParentCategoryFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Parent category {}'.format(n))
-    slug = factory.LazyAttribute(lambda o: slugify(o.name))
+    # slug = factory.LazyAttribute(lambda o: slugify(o.name))
+    parent = None
 
     class Meta:
         model = Category
-        django_get_or_create = ('slug', )
+        django_get_or_create = ('parent', 'slug', )
 
 
 class CategoryFactory(factory.DjangoModelFactory):
     parent = factory.SubFactory('tests.apps.signals.factories.ParentCategoryFactory')
     name = factory.Sequence(lambda n: 'Category {}'.format(n))
-    slug = factory.LazyAttribute(lambda o: slugify(o.name))
+    # slug = factory.LazyAttribute(lambda o: slugify(o.name))
     handling = fuzzy.FuzzyChoice([c[0] for c in Category.HANDLING_CHOICES])
 
     class Meta:

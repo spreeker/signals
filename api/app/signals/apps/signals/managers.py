@@ -373,3 +373,8 @@ class SignalManager(models.Manager):
             signal.save()
 
         return note
+
+
+class CategoryManager(models.Manager):
+    def delete(self, *args, **kwargs):
+        raise NotImplementedError('We do not allow delete on categories.')

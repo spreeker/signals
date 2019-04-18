@@ -2,6 +2,8 @@ from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
+from signals.apps.signals.managers import CategoryManager
+
 
 class Category(models.Model):
     HANDLING_A3DMC = 'A3DMC'
@@ -43,9 +45,11 @@ class Category(models.Model):
     departments = models.ManyToManyField('signals.Department')
     is_active = models.BooleanField(default=True)
 
+    objects = CategoryManager()
+
     class Meta:
         ordering = ('name',)
-        unique_together = ('parent', 'slug',)
+        unique_together = ('parent', 'slug',)  # does not work if parent == None
         verbose_name_plural = 'Categories'
 
     def __str__(self):
@@ -65,7 +69,33 @@ class Category(models.Model):
         if self.is_parent() and self.is_child() or self.is_child() and self.parent.is_child():
             raise ValidationError('Category hierarchy can only go one level deep')
 
+    def validate_unique(self, exclude=None):
+        if Category.objects.filter(parent=self.parent, slug=self.slug).exists():
+            msg = 'Combination parent and slug not unique: ({}, {})'.format(
+                self.parent, self.slug
+            )
+            raise ValidationError(msg)
+
     def save(self, *args, **kwargs):
+        """Slug for new instance; disallow slug mutation for old instance."""
+        # Note: We do not want changes to the slug, because these slugs are used
+        # in the URLs of the API that is built on this model. If name is
+        # mutated for display purposes, we want the URLs pointing to the
+        # Category instance to stay the same. It is up to the good taste of
+        # our business representatives to not change Category semantics through
+        # a name change, we allow them only to fix typos.
+
         self._validate()
-        self.slug = slugify(self.name)
+
+        if not self.pk:  # we are a new Category instance
+            self.slug = slugify(self.name)
+        elif self.slug:  # existing Category instance cannot have its slug value changed:
+            slug_in_db = Category.objects.values_list('slug', flat=True).get(id=self.pk)
+            if self.slug != slug_in_db:
+                raise ValueError('Category slug must not be changed.')
+
+        self.validate_unique()  # test killer
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise NotImplementedError('We do not allow delete on categories.')
